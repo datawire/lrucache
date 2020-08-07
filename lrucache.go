@@ -13,13 +13,12 @@ import (
 // limit would be exceeded or (if set) the entries are older than MaxAge (in
 // seconds).  Use the New constructor to create one.
 type LruCache struct {
-	MaxSize int64
-	MaxAge  int64
-
-	mu    sync.Mutex
-	cache map[string]*list.Element
-	lru   *list.List // Front is least-recent
-	size  int64
+	mu      sync.Mutex
+	maxSize int64
+	maxAge  int64
+	cache   map[string]*list.Element
+	lru     *list.List // Front is least-recent
+	size    int64
 }
 
 // New creates an LruCache that will restrict itself to maxSize bytes of
@@ -27,8 +26,8 @@ type LruCache struct {
 // seconds.
 func New(maxSize, maxAge int64) *LruCache {
 	c := &LruCache{
-		MaxSize: maxSize,
-		MaxAge:  maxAge,
+		maxSize: maxSize,
+		maxAge:  maxAge,
 		lru:     list.New(),
 		cache:   make(map[string]*list.Element),
 	}
@@ -47,7 +46,7 @@ func (c *LruCache) Get(key string) ([]byte, bool) {
 		return nil, false
 	}
 
-	if c.MaxAge > 0 && le.Value.(*entry).expires <= time.Now().Unix() {
+	if c.maxAge > 0 && le.Value.(*entry).expires <= time.Now().Unix() {
 		c.deleteElement(le)
 		c.maybeDeleteOldest()
 
@@ -67,8 +66,8 @@ func (c *LruCache) Set(key string, value []byte) {
 	c.mu.Lock()
 
 	expires := int64(0)
-	if c.MaxAge > 0 {
-		expires = time.Now().Unix() + c.MaxAge
+	if c.maxAge > 0 {
+		expires = time.Now().Unix() + c.maxAge
 	}
 
 	if le, ok := c.cache[key]; ok {
@@ -109,7 +108,7 @@ func (c *LruCache) Size() int64 {
 }
 
 func (c *LruCache) maybeDeleteOldest() {
-	for c.size > c.MaxSize {
+	for c.size > c.maxSize {
 		le := c.lru.Front()
 		if le == nil {
 			panic("LruCache: non-zero size but empty lru")
@@ -117,7 +116,7 @@ func (c *LruCache) maybeDeleteOldest() {
 		c.deleteElement(le)
 	}
 
-	if c.MaxAge > 0 {
+	if c.maxAge > 0 {
 		now := time.Now().Unix()
 		for le := c.lru.Front(); le != nil && le.Value.(*entry).expires <= now; le = c.lru.Front() {
 			c.deleteElement(le)
