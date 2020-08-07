@@ -6,7 +6,7 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/die-net/lrucache"
+	"github.com/datawire/lrucache"
 )
 
 func TestInterface(t *testing.T) {

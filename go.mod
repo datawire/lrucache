@@ -1,4 +1,4 @@
-module github.com/die-net/lrucache
+module github.com/datawire/lrucache
 
 go 1.12
 
