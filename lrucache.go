@@ -35,6 +35,20 @@ func New(maxSize, maxAge int64) *LruCache {
 	return c
 }
 
+func (c *LruCache) SetMaxSize(maxSize int64) {
+	c.mu.Lock()
+	c.maxSize = maxSize
+	c.maybeDeleteOldest()
+	c.mu.Unlock()
+}
+
+func (c *LruCache) SetMaxAge(maxAge int64) {
+	c.mu.Lock()
+	c.maxAge = maxAge
+	c.maybeDeleteOldest()
+	c.mu.Unlock()
+}
+
 // Get returns the []byte representation of a cached response and a bool
 // set to true if the key was found.
 func (c *LruCache) Get(key string) ([]byte, bool) {
